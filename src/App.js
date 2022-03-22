@@ -19,7 +19,7 @@ const list = [
   },
 ];
 
-// root component
+// definition of App component
 function App() {
   return (
     <div>
@@ -28,13 +28,15 @@ function App() {
       <Search />
 
       <hr />
-
+      {/* creating an instance of List component */}
+      <List />
+      {/* creating an instance of List component */}
       <List />
     </div>
   );
 }
 
-// child components
+// definition of Search component
 function Search() {
   return (
     <div>
@@ -44,6 +46,7 @@ function Search() {
   );
 }
 
+// definition of List component
 function List() {
   return (
     <ul>
