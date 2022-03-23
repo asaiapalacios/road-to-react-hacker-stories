@@ -19,51 +19,42 @@ const list = [
   },
 ];
 
-// definition of App component
-function App() {
-  return (
-    <div>
-      <h1>My Hacker Stories</h1>
+// arrow function with a concise body (implicit return)
+const App = () => (
+  <div>
+    <h1>My Hacker Stories</h1>
 
-      <Search />
+    <Search />
 
-      <hr />
-      {/* creating an instance of List component */}
-      <List />
-      {/* creating an instance of List component */}
-      <List />
-    </div>
-  );
-}
+    <hr />
 
-// definition of Search component
-function Search() {
-  return (
-    <div>
-      <label htmlFor="search">Search: </label>
-      <input id="search" type="text" />
-    </div>
-  );
-}
+    {/* an instance of List component */}
+    <List />
+  </div>
+);
 
-// definition of List component
-function List() {
-  return (
-    <ul>
-      {list.map((item) => {
-        return (
-          <li key={item.objectID}>
-            <span>
-              <a href={item.url}>{item.title}: </a>
-            </span>
-            <span>{item.author}; </span>
-            <span>{item.num_comments}, </span>
-            <span>{item.points}</span>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
+// arrow function with a concise body (implicit return)
+const Search = () => (
+  <div>
+    <label htmlFor="search">Search: </label>
+    <input id="search" type="text" />
+  </div>
+);
+
+// arrow function with a concise body (implicit return)
+const List = () => (
+  <ul>
+    {list.map((item) => (
+      <li key={item.objectID}>
+        <span>
+          <a href={item.url}>{item.title}: </a>
+        </span>
+        <span>{item.author}; </span>
+        <span>{item.num_comments}, </span>
+        <span>{item.points}</span>
+      </li>
+    ))}
+  </ul>
+);
 
 export default App;
