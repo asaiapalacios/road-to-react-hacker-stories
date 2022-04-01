@@ -33,13 +33,22 @@ const App = () => (
   </div>
 );
 
-// arrow function with a concise body (implicit return)
-const Search = () => (
-  <div>
-    <label htmlFor="search">Search: </label>
-    <input id="search" type="text" />
-  </div>
-);
+const Search = () => {
+  // This event handler function:
+  // -receives the event object from user interaction (typed input);
+  // -accesses through the object passed for the emitted value: event.target.value (the input field value)
+  // -> the emitted value is logged to the console
+  const handleChange = (event) => {
+    return console.log(event.target.value);
+  };
+
+  return (
+    <div>
+      <label htmlFor="search">Search: </label>
+      <input id="search" type="text" onChange={handleChange} />
+    </div>
+  );
+};
 
 // arrow function with a concise body (implicit return)
 const List = () => (
