@@ -35,12 +35,15 @@ function App() {
 }
 
 function Search() {
+  // Tell React that searchTerm is a state that changes over time; whenever it changes, React has to re-render its affected component(s)
+  const [searchTerm, setSearchTerm] = React.useState("");
   // This event handler function:
   // -receives the event object from user interaction/event change triggered when user typed input value;
   // -accesses the object passed, specifically, targeting the emitted value: event.target.value (the input field value)
   // -> the emitted value is logged to the console
   const handleChange = (event) => {
-    return console.log(event.target.value);
+    // Alter the current state searchTerm/set the updated state via the state updater function setSearchTerm
+    setSearchTerm(event.target.value);
   };
 
   return (
@@ -48,6 +51,11 @@ function Search() {
       <label htmlFor="search">Search: </label>
       {/* handleChange is a reference to the function */}
       <input id="search" type="text" onChange={handleChange} />
+      {/* After the updated state is set in a component, the component renders again, meaning the component Search function runs again 
+      The updated state searchTerm becomes the current state and is displayed in the component's JSX. */}
+      <p>
+        Searching for <strong>{searchTerm}</strong>.
+      </p>
     </div>
   );
 }
