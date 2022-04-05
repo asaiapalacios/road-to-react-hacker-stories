@@ -1,6 +1,12 @@
 import * as React from "react";
 
 function App() {
+  // Introduce callback function handleSearch that...
+  const handleSearch = (event) => {
+    // calls back to the place it was introduced (Search component)
+    console.log(event.target.value);
+  };
+
   const stories = [
     {
       title: "React",
@@ -24,7 +30,8 @@ function App() {
     <div>
       <h1>My Hacker Stories</h1>
       {/* an instance of Search component */}
-      <Search />
+      {/* The callback function handleSearch is used elsewhere, passed to the Search component as a prop value */}
+      <Search onChange={handleSearch} />
 
       <hr />
 
@@ -34,7 +41,7 @@ function App() {
   );
 }
 
-function Search() {
+function Search(props) {
   // Tell React that searchTerm is a state that changes over time; whenever it changes, React has to re-render its affected component(s)
   const [searchTerm, setSearchTerm] = React.useState("");
   // This event handler function:
@@ -44,6 +51,9 @@ function Search() {
   const handleChange = (event) => {
     // Alter the current state searchTerm/set the updated state via the state updater function setSearchTerm
     setSearchTerm(event.target.value);
+    // The Search component uses this callback handler, from its incoming props, to call it whenever a user types into the HTML input field
+    // When the user types into the input field, it triggers an event object that gets passed back to the callback handler function in the App component
+    props.onSearch(event);
   };
 
   return (
