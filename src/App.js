@@ -1,12 +1,6 @@
 import * as React from "react";
 
 function App() {
-  // Introduce callback function handleSearch that...
-  const handleSearch = (event) => {
-    // calls back to the place it was introduced (Search component)
-    console.log(event.target.value);
-  };
-
   const stories = [
     {
       title: "React",
@@ -25,6 +19,12 @@ function App() {
       objectID: 1,
     },
   ];
+
+  // Introduce callback function handleSearch that...
+  const handleSearch = (event) => {
+    // calls back to the place it was introduced (Search component)
+    console.log(event.target.value);
+  };
 
   return (
     <div>
