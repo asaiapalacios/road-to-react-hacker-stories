@@ -20,52 +20,47 @@ function App() {
     },
   ];
 
-  // Introduce callback function handleSearch that...
+  // Tell React that searchTerm is a state that changes over time
+  // Whenever state changes, React re-renders its affected component(s)
+  const [searchTerm, setSearchTerm] = React.useState("");
+
+  // Callback handler receives event object from <Search /> after triggered event from typed HTML input field
   const handleSearch = (event) => {
-    // calls back to the place it was introduced (Search component)
-    console.log(event.target.value);
+    // Access input field value to alter the current state searchTerm
+    // -> Set the updated state via the state updater function setSearchTerm
+    setSearchTerm(event.target.value);
   };
+
+  // *Note*: after the state is updated, the component renders again
+
+  // The filter function checks whether the searchTerm is present in the story item's title
+  const searchedStories = stories.filter((story) =>
+    // Address the letter case so the filter function won't be too opinionated & render no list
+    // -> lower case the story's title and the searchTerm to make them equal
+    story.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div>
       <h1>My Hacker Stories</h1>
-      {/* an instance of Search component */}
-      {/* The callback function handleSearch is used elsewhere, passed to the Search component as a prop value */}
-      <Search onChange={handleSearch} />
+      {/* handleSearch is a reference to the callback function handleSearch() */}
+      {/* this callback handler receives the event obj from Search component onChange property */}
+      <Search onSearch={handleSearch} />
 
       <hr />
 
       {/* an instance of List component */}
-      <List list={stories} />
+      <List list={searchedStories} />
     </div>
   );
 }
 
 function Search(props) {
-  // Tell React that searchTerm is a state that changes over time; whenever it changes, React has to re-render its affected component(s)
-  const [searchTerm, setSearchTerm] = React.useState("");
-  // This event handler function:
-  // -receives the event object from user interaction/event change triggered when user typed input value;
-  // -accesses the object passed, specifically, targeting the emitted value: event.target.value (the input field value)
-  // -> the emitted value is logged to the console
-  const handleChange = (event) => {
-    // Alter the current state searchTerm/set the updated state via the state updater function setSearchTerm
-    setSearchTerm(event.target.value);
-    // The Search component uses this callback handler, from its incoming props, to call it whenever a user types into the HTML input field
-    // When the user types into the input field, it triggers an event object that gets passed back to the callback handler function in the App component
-    props.onSearch(event);
-  };
-
   return (
     <div>
       <label htmlFor="search">Search: </label>
-      {/* handleChange is a reference to the function */}
-      <input id="search" type="text" onChange={handleChange} />
-      {/* After the updated state is set in a component, the component renders again, meaning the component Search function runs again 
-      The updated state searchTerm becomes the current state and is displayed in the component's JSX. */}
-      <p>
-        Searching for <strong>{searchTerm}</strong>.
-      </p>
+      {/* Pass to handleSearch callback the event object after typed HTML input field triggers event */}
+      <input id="search" type="text" onChange={props.onSearch} />
     </div>
   );
 }
@@ -81,8 +76,7 @@ function List(props) {
   );
 }
 
-// Pull our item into its own component
-// Each item is focused on what the items inside of that list looks like
+// Pass each item to the Item component as props & specify what to display
 function Item(props) {
   return (
     <li>
