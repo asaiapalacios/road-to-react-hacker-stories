@@ -22,7 +22,7 @@ function App() {
 
   // Tell React that searchTerm is a state that changes over time
   // Whenever state changes, React re-renders its affected component(s)
-  const [searchTerm, setSearchTerm] = React.useState("");
+  const [searchTerm, setSearchTerm] = React.useState("React");
 
   // Callback handler receives event object from <Search /> after triggered event from typed HTML input field
   const handleSearch = (event) => {
@@ -45,7 +45,7 @@ function App() {
       <h1>My Hacker Stories</h1>
       {/* handleSearch is a reference to the callback function handleSearch() */}
       {/* this callback handler receives the event obj from Search component onChange property */}
-      <Search onSearch={handleSearch} />
+      <Search search={searchTerm} onSearch={handleSearch} />
 
       <hr />
 
@@ -60,7 +60,12 @@ function Search(props) {
     <div>
       <label htmlFor="search">Search: </label>
       {/* Pass to handleSearch callback the event object after typed HTML input field triggers event */}
-      <input id="search" type="text" onChange={props.onSearch} />
+      <input
+        id="search"
+        type="text"
+        value={props.search}
+        onChange={props.onSearch}
+      />
     </div>
   );
 }
