@@ -55,26 +55,21 @@ function App() {
   );
 }
 
-function Search(props) {
+function Search({ search, onSearch }) {
   return (
     <div>
       <label htmlFor="search">Search: </label>
       {/* Pass to handleSearch callback the event object after typed HTML input field triggers event */}
-      <input
-        id="search"
-        type="text"
-        value={props.search}
-        onChange={props.onSearch}
-      />
+      <input id="search" type="text" value={search} onChange={onSearch} />
     </div>
   );
 }
 
 // Render list
-function List(props) {
+function List({ list }) {
   return (
     <ul>
-      {props.list.map((item) => (
+      {list.map((item) => (
         <Item key={item.objectID} item={item} />
       ))}
     </ul>
@@ -82,17 +77,27 @@ function List(props) {
 }
 
 // Pass each item to the Item component as props & specify what to display
-function Item(props) {
+function Item({ item }) {
   return (
     <li>
       <span>
-        <a href={props.item.url}>{props.item.title}</a>
+        <a href={item.url}>{item.title}</a>
       </span>
-      <span>{props.item.author}</span>
-      <span>{props.item.num_comments}</span>
-      <span>{props.item.points}</span>
+      <span>{item.author}</span>
+      <span>{item.num_comments}</span>
+      <span>{item.points}</span>
     </li>
   );
 }
 
 export default App;
+
+// NOTES
+// The browser will (2):
+// 1) Create an event object when...
+// -the user types a value in the input field; and
+// -presses the Enter key or selects the Add button to submit.
+
+// 2) Put details into...
+// -the event object; then
+// -pass it as an argument (event) to the handler (handleAddTodo).
