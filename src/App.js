@@ -22,12 +22,29 @@ function App() {
 
   // Tell React that searchTerm is a state that changes over time
   // Whenever state changes, React re-renders its affected component(s)
-  const [searchTerm, setSearchTerm] = React.useState("React");
+
+  // 2) RETRIEVE in browser's local storage recent search when browser loads/restarts:
+  // -> set initial state to stored search value in localStorage; else...
+  // -> default to "React" as initial state upon component initialization
+  const [searchTerm, setSearchTerm] = React.useState(
+    localStorage.getItem("search") || "React"
+  );
+
+  // Each time the searchTerm changes, run useEffect Hook to update local storage
+  React.useEffect(() => {
+    // 1) STORE searchTerm into browser's local storage:
+    // 1st Argument: a callback function that runs the side-effect
+    // -> insert str identifier first (key), followed by what user typed in the input field (string value searchTerm)
+    // 2nd Argument is a "dependency array of variables":
+    // - every time the searchTerm changes, the function for the side effect is called
+    // - it's also called initially when the component renders for the first time
+    localStorage.setItem("search", searchTerm);
+  }, [searchTerm]);
 
   // Callback handler receives event object from <Search /> after triggered event from typed HTML input field
   const handleSearch = (event) => {
     // Access input field value to alter the current state searchTerm
-    // -> Set the updated state via the state updater function setSearchTerm
+    // -> set the updated state via the state updater function setSearchTerm
     setSearchTerm(event.target.value);
   };
 
@@ -35,8 +52,10 @@ function App() {
 
   // The filter function checks whether the searchTerm is present in the story item's title
   const searchedStories = stories.filter((story) =>
-    // Address the letter case so the filter function won't be too opinionated & render no list
-    // -> lower case the story's title and the searchTerm to make them equal
+    // Address the letter case so the filter function won't be too opinionated & render no list:
+    // -> story's title not case sensitive + check to see if...
+    // -> current state searchTerm characters (also not case sensitive) match with item title of the array
+    // point: if characters typed match title, send to List component
     story.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -49,23 +68,28 @@ function App() {
 
       <hr />
 
-      {/* an instance of List component */}
+      {/* Send post-filtered title match to List component */}
+      {/* Receives back item match displaying key/values in list form 
+      (objectID not displayed but used as identifier for item) */}
       <List list={searchedStories} />
     </div>
   );
 }
 
+// Remember the most recent search & pass this data back
+// (so app can eventually display it in the browser whenever it restarts}
 function Search({ search, onSearch }) {
   return (
     <div>
       <label htmlFor="search">Search: </label>
-      {/* Pass to handleSearch callback the event object after typed HTML input field triggers event */}
+      {/* Pass to handleSearch callback the event object after typed HTML input field 
+      (access to event value) */}
       <input id="search" type="text" value={search} onChange={onSearch} />
     </div>
   );
 }
 
-// Render list
+// Render list of post-filtered title match
 function List({ list }) {
   return (
     <ul>
@@ -76,7 +100,7 @@ function List({ list }) {
   );
 }
 
-// Pass each item to the Item component as props & specify what to display
+// Pass each match item to the Item component as props & specify what to display
 function Item({ item }) {
   return (
     <li>
