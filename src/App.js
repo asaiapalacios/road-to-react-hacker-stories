@@ -1,5 +1,32 @@
 import * as React from "react";
 
+// Tell React that searchTerm is a state that changes over time
+// Whenever state changes, React re-renders its affected component(s)
+
+// Create custom built-in hook to keep the component's state in sync w/the browser's local storage
+function useStorageState(key, initialState) {
+  // 2) RETRIEVE in browser's local storage recent search when browser loads/restarts:
+  // -> set initial state to stored search value in localStorage; else...
+  // -> default to "React" as initial state upon component initialization
+  const [value, setValue] = React.useState(
+    localStorage.getItem(key) || initialState
+  );
+
+  // Each time the searchTerm changes, run useEffect Hook to update local storage
+  React.useEffect(() => {
+    // 1) STORE searchTerm into browser's local storage:
+    // 1st Argument: a callback function that runs the side-effect
+    // -> insert str identifier first (key), followed by what user typed in the input field (string value searchTerm)
+    // 2nd Argument is a "dependency array of variables":
+    // - every time the searchTerm changes, the function for the side effect is called
+    // - it's also called initially when the component renders for the first time
+    localStorage.setItem(key, value);
+  }, [value, key]);
+
+  // React convention: returned values are returned as an array
+  return [value, setValue];
+}
+
 function App() {
   const stories = [
     {
@@ -20,26 +47,7 @@ function App() {
     },
   ];
 
-  // Tell React that searchTerm is a state that changes over time
-  // Whenever state changes, React re-renders its affected component(s)
-
-  // 2) RETRIEVE in browser's local storage recent search when browser loads/restarts:
-  // -> set initial state to stored search value in localStorage; else...
-  // -> default to "React" as initial state upon component initialization
-  const [searchTerm, setSearchTerm] = React.useState(
-    localStorage.getItem("search") || "React"
-  );
-
-  // Each time the searchTerm changes, run useEffect Hook to update local storage
-  React.useEffect(() => {
-    // 1) STORE searchTerm into browser's local storage:
-    // 1st Argument: a callback function that runs the side-effect
-    // -> insert str identifier first (key), followed by what user typed in the input field (string value searchTerm)
-    // 2nd Argument is a "dependency array of variables":
-    // - every time the searchTerm changes, the function for the side effect is called
-    // - it's also called initially when the component renders for the first time
-    localStorage.setItem("search", searchTerm);
-  }, [searchTerm]);
+  const [searchTerm, setSearchTerm] = useStorageState("search", "React");
 
   // Callback handler receives event object from <Search /> after triggered event from typed HTML input field
   const handleSearch = (event) => {
@@ -55,7 +63,7 @@ function App() {
     // Address the letter case so the filter function won't be too opinionated & render no list:
     // -> story's title not case sensitive + check to see if...
     // -> current state searchTerm characters (also not case sensitive) match with item title of the array
-    // point: if characters typed match title, send to List component
+    // point: if search characters typed match title characters, send to List component
     story.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -77,7 +85,7 @@ function App() {
 }
 
 // Remember the most recent search & pass this data back
-// (so app can eventually display it in the browser whenever it restarts}
+// (so app can display it in the browser once it loads up, restarts/upon component initialization}
 function Search({ search, onSearch }) {
   return (
     <div>
@@ -124,4 +132,4 @@ export default App;
 
 // 2) Put details into...
 // -the event object; then
-// -pass it as an argument (event) to the handler (handleAddTodo).
+// -pass it as an argument (event) to the handler
