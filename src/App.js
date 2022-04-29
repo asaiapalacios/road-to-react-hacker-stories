@@ -77,10 +77,11 @@ function App() {
       {/* this callback handler receives the event obj from Search component onChange property */}
       <InputWithLabel
         id="search"
-        label="Search"
         value={searchTerm}
         onInputChange={handleSearch}
-      />
+      >
+        <strong>Search:</strong>
+      </InputWithLabel>
 
       <hr />
 
@@ -95,10 +96,10 @@ function App() {
 // D) Pass searchTerm as initial state or last state in localStorage (input value displayed), but once...
 // user types input value, new updated state is shown (from e. object passed to Search instance, which then...
 // calls callback handler to run setter state update that re-renders component and displays current state).
-function InputWithLabel({ id, label, value, type = "text", onInputChange }) {
+function InputWithLabel({ id, value, type = "text", onInputChange, children }) {
   return (
     <>
-      <label htmlFor={id}>{label}</label>
+      <label htmlFor={id}>{children}</label>
       &nbsp;
       <input id={id} type={type} value={value} onChange={onInputChange} />
     </>
