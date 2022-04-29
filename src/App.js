@@ -51,7 +51,7 @@ function App() {
   // A) Call custom hook and pass 2 arguments; receive returned array values for [searchterm, setSearchTerm]
   const [searchTerm, setSearchTerm] = useStorageState("search", "React");
 
-  // E) Callback handler reference receives event object from <Search /> to update state
+  // E) Callback handler reference receives event object from <Search /> instance to update state
   const handleSearch = (e) => {
     // Access input field value to alter the current state searchTerm
     // -> set the updated state via the state updater function setSearchTerm
@@ -75,12 +75,17 @@ function App() {
       {/* C) Pass value state (searchTerm) and callback handler to Search component */}
       {/* handleSearch is a reference to the callback function handleSearch() */}
       {/* this callback handler receives the event obj from Search component onChange property */}
-      <Search search={searchTerm} onSearch={handleSearch} />
+      <InputWithLabel
+        id="search"
+        label="Search"
+        value={searchTerm}
+        onInputChange={handleSearch}
+      />
 
       <hr />
 
       {/* G) Send post-filtered title match to List component */}
-      {/* Receive back from List component & in list form: item match w/displayed key/values 
+      {/* J) Receive back from List component & in list form: item match w/displayed key/values 
       (except for objectID -> not displayed but used as an identifier for item) */}
       <List list={searchedStories} />
     </div>
@@ -90,11 +95,12 @@ function App() {
 // D) Pass searchTerm as initial state or last state in localStorage (input value displayed), but once...
 // user types input value, new updated state is shown (from e. object passed to Search instance, which then...
 // calls callback handler to run setter state update that re-renders component and displays current state).
-function Search({ search, onSearch }) {
+function InputWithLabel({ id, label, value, type = "text", onInputChange }) {
   return (
     <>
-      <label htmlFor="search">Search: </label>
-      <input id="search" type="text" value={search} onChange={onSearch} />
+      <label htmlFor={id}>{label}</label>
+      &nbsp;
+      <input id={id} type={type} value={value} onChange={onInputChange} />
     </>
   );
 }
