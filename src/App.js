@@ -78,6 +78,8 @@ function App() {
       <InputWithLabel
         id="search"
         value={searchTerm}
+        // Let developer decide wheter the input field should have an active autoFocus
+        isFocused
         onInputChange={handleSearch}
       >
         <strong>Search:</strong>
@@ -96,12 +98,41 @@ function App() {
 // D) Pass searchTerm as initial state or last state in localStorage (input value displayed), but once...
 // user types input value, new updated state is shown (from e. object passed to Search instance, which then...
 // calls callback handler to run setter state update that re-renders component and displays current state).
-function InputWithLabel({ id, value, type = "text", onInputChange, children }) {
+function InputWithLabel({
+  id,
+  value,
+  type = "text",
+  onInputChange,
+  isFocused,
+  children,
+}) {
+  const inputRef = React.useRef();
+
+  // Perform focus on input element when component renders or dependencies change
+  React.useEffect(() => {
+    // Execute element's focus as a side-effect if:
+    // -isFocused is set and
+    // -the current property is existent
+    if (isFocused && inputRef.current) {
+      // Note: current property gives access to the input element to make changes to it (focus)
+      inputRef.current.focus();
+    }
+  }, [isFocused]);
+
   return (
     <>
       <label htmlFor={id}>{children}</label>
       &nbsp;
-      <input id={id} type={type} value={value} onChange={onInputChange} />
+      <input
+        // ref object, inputRef, is passed to element's JSX-ref attribute
+        // -> the input element's instance gets assigned to...
+        //  the changeable *current* property (has access to the input element)
+        ref={inputRef}
+        id={id}
+        type={type}
+        value={value}
+        onChange={onInputChange}
+      />
     </>
   );
 }
