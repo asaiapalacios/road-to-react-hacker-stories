@@ -1,5 +1,24 @@
 import * as React from "react";
 
+const initialStories = [
+  {
+    title: "React",
+    url: "https://reactjs.org/",
+    author: "Jordan Walke",
+    num_comments: 3,
+    points: 4,
+    objectID: 0,
+  },
+  {
+    title: "Redux",
+    url: "https://redux.js.org/",
+    author: "Dan Abramov, Andrew Clark",
+    num_comments: 2,
+    points: 5,
+    objectID: 1,
+  },
+];
+
 // Create custom built-in hook to keep the component's state in sync w/the browser's local storage
 function useStorageState(key, initialState) {
   // With useState, you tell React that value is a state that changes over time:
@@ -29,27 +48,19 @@ function useStorageState(key, initialState) {
 }
 
 function App() {
-  const stories = [
-    {
-      title: "React",
-      url: "https://reactjs.org/",
-      author: "Jordan Walke",
-      num_comments: 3,
-      points: 4,
-      objectID: 0,
-    },
-    {
-      title: "Redux",
-      url: "https://redux.js.org/",
-      author: "Dan Abramov, Andrew Clark",
-      num_comments: 2,
-      points: 5,
-      objectID: 1,
-    },
-  ];
-
   // A) Call custom hook and pass 2 arguments; receive returned array values for [searchterm, setSearchTerm]
   const [searchTerm, setSearchTerm] = useStorageState("search", "React");
+
+  // Make list initialStories stateful by using it as initial state stories
+  const [stories, setStories] = React.useState(initialStories);
+
+  // Write an event handler which removes an item from the list
+  const handleRemoveStory = (item) => {
+    const newStories = stories.filter(
+      (story) => item.objectID !== story.objectID
+    );
+    setStories(newStories);
+  };
 
   // E) Callback handler reference receives event object from <Search /> instance to update state
   const handleSearch = (e) => {
@@ -90,7 +101,7 @@ function App() {
       {/* G) Send post-filtered title match to List component */}
       {/* J) Receive back from List component & in list form: item match w/displayed key/values 
       (except for objectID -> not displayed but used as an identifier for item) */}
-      <List list={searchedStories} />
+      <List list={searchedStories} onRemoveItem={handleRemoveStory} />
     </div>
   );
 }
@@ -138,18 +149,22 @@ function InputWithLabel({
 }
 
 // H) Render list of post-filtered title match
-function List({ list }) {
+function List({ list, onRemoveItem }) {
   return (
     <ul>
       {list.map((item) => (
-        <Item key={item.objectID} item={item} />
+        <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem} />
       ))}
     </ul>
   );
 }
 
 // I) Pass each match item to the Item component as props & specify what to display
-function Item({ item }) {
+function Item({ item, onRemoveItem }) {
+  // const handleRemoveItem = () => {
+  //   onRemoveItem(item);
+  // };
+
   return (
     <li>
       <span>
@@ -158,6 +173,11 @@ function Item({ item }) {
       <span>{item.author}</span>
       <span>{item.num_comments}</span>
       <span>{item.points}</span>
+      <span>
+        <button type="button" onClick={() => onRemoveItem(item)}>
+          Dismiss
+        </button>
+      </span>
     </li>
   );
 }
