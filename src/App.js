@@ -19,12 +19,23 @@ const initialStories = [
   },
 ];
 
+// F)
+// Return a promise with data once it resolves
+// note: resolved object returned holds, after a 2 sec delay, the list of stories (aka initialStories)
+const getAsyncStories = () =>
+  new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ data: { stories: initialStories } });
+    }, 2000);
+  });
+
 // Create custom built-in hook to keep the component's state in sync w/the browser's local storage
 function useStorageState(key, initialState) {
   // With useState, you tell React that value is a state that changes over time:
   // when state changes, React re-renders its affected component(s)
 
-  // *RETRIEVE* in browser's local storage recent search when browser loads/restarts:
+  // C)
+  // *RETRIEVE* from browser's local storage most recent searchTerm. Page loads & displays it
   // -> set state to last stored search value in localStorage; else...
   // -> default to "React" as initial state upon component initialization
   const [value, setValue] = React.useState(
@@ -32,27 +43,44 @@ function useStorageState(key, initialState) {
   );
 
   // Each time value state changes, run useEffect Hook to update local storage
-  // (also called initially when the component renders for the first time)
+  // (also runs initially when the component renders for the first time + when array values change (2nd arg))
+
+  // B)
+  // STORE searchTerm (value) into browser's local storage:
+  // 1st Argument: run side-effect function (a callback) that stores searchTerm (value) to local storage
+  // -> insert str identifier first (key), followed by what user typed in the input field (string searchTerm value)
+
+  // 2nd Argument is a "dependency array of variables":
+  // - when value state changes, the side effect function is called, or...
+  // - when the component renders for the first time, side-effect function is also called
   React.useEffect(() => {
-    // B) STORE searchTerm into browser's local storage:
-    // 1st Argument: a callback function that runs the side-effect
-    // -> insert str identifier first (key), followed by what user typed in the input field (string value searchTerm)
-    // 2nd Argument is a "dependency array of variables":
-    // - when value state changes, the function for the side effect is called, or...
-    // - when the component renders for the first time, function is also called initially
     localStorage.setItem(key, value);
   }, [value, key]);
 
-  // React convention: returned values are returned, this time, as an array
+  // D)
+  // React convention: Return most recent search value and state updater function in an array form
   return [value, setValue];
 }
 
 function App() {
-  // A) Call custom hook and pass 2 arguments; receive returned array values for [searchterm, setSearchTerm]
+  // A)
+  // Call custom hook and pass 2 arguments; Receive returned array values for [searchterm, setSearchTerm]
   const [searchTerm, setSearchTerm] = useStorageState("search", "React");
 
-  // Make list initialStories stateful by using it as initial state stories
-  const [stories, setStories] = React.useState(initialStories);
+  // E)
+  // Start w/an empty list of stories (an empty array) for the initial state
+  // (we will eventually simulate fetching these stories asynchronously)
+  const [stories, setStories] = React.useState([]);
+
+  // G)
+  // Simulate fetching stories (initialStories) asynchronously:
+  // a) call getAsyncStories() function
+  // b) resolve the returned promise (result) as a side-effect (only runs once component renders for 1st time)
+  React.useEffect(() => {
+    getAsyncStories().then((result) => {
+      setStories(result.data.stories);
+    });
+  }, []);
 
   // Write an event handler which removes an item from the list
   const handleRemoveStory = (item) => {
@@ -62,7 +90,7 @@ function App() {
     setStories(newStories);
   };
 
-  // E) Callback handler reference receives event object from <Search /> instance to update state
+  // I) Callback handler reference receives event object from <Search /> instance to update state
   const handleSearch = (e) => {
     // Access input field value to alter the current state searchTerm
     // -> set the updated state via the state updater function setSearchTerm
@@ -71,7 +99,7 @@ function App() {
 
   // *Note*: after the state is updated, the component renders again
 
-  // F) The filter function checks whether current searchTerm state is present in the story item's title
+  // J) The filter function checks whether current searchTerm state is present in the story item's title
   const searchedStories = stories.filter((story) =>
     // Address the letter case so the filter function won't be too opinionated & render no list:
     // -> story's title not case sensitive + check to see if...
@@ -83,9 +111,9 @@ function App() {
   return (
     <div>
       <h1>My Hacker Stories</h1>
-      {/* C) Pass value state (searchTerm) and callback handler to Search component */}
+      {/* H) Pass value state (searchTerm) and callback handler to Search component */}
       {/* handleSearch is a reference to the callback function handleSearch() */}
-      {/* this callback handler receives the event obj from Search component onChange property */}
+      {/* this callback handler receives the event obj from InputWithLabel component onChange property */}
       <InputWithLabel
         id="search"
         value={searchTerm}
@@ -98,8 +126,8 @@ function App() {
 
       <hr />
 
-      {/* G) Send post-filtered title match to List component */}
-      {/* J) Receive back from List component & in list form: item match w/displayed key/values 
+      {/* K) Send post-filtered title match to List component */}
+      {/* L) Receive back from List component & in list form: item match w/displayed key/values 
       (except for objectID -> not displayed but used as an identifier for item) */}
       <List list={searchedStories} onRemoveItem={handleRemoveStory} />
     </div>
