@@ -72,14 +72,23 @@ function App() {
   // (we will eventually simulate fetching these stories asynchronously)
   const [stories, setStories] = React.useState([]);
 
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isError, setIsError] = React.useState(false);
+
   // G)
   // Simulate fetching stories (initialStories) asynchronously:
   // a) call getAsyncStories() function
   // b) resolve the returned promise (result) as a side-effect (only runs once component renders for 1st time)
   React.useEffect(() => {
-    getAsyncStories().then((result) => {
-      setStories(result.data.stories);
-    });
+    // Set state accordingly when data gets fetched
+    setIsLoading(true);
+
+    getAsyncStories()
+      .then((result) => {
+        setStories(result.data.stories);
+        setIsLoading(false);
+      })
+      .catch(() => setIsError(true));
   }, []);
 
   // Write an event handler which removes an item from the list
@@ -125,11 +134,18 @@ function App() {
       </InputWithLabel>
 
       <hr />
+      {/* Conditionally render JSX: */}
+      {/* Render error message when can't retrieve data from remote API (a simulation) */}
+      {isError && <p>Something went wrong. Yikes ...</p>}
 
       {/* K) Send post-filtered title match to List component */}
       {/* L) Receive back from List component & in list form: item match w/displayed key/values 
       (except for objectID -> not displayed but used as an identifier for item) */}
-      <List list={searchedStories} onRemoveItem={handleRemoveStory} />
+      {isLoading ? (
+        <p>Loading ...</p>
+      ) : (
+        <List list={searchedStories} onRemoveItem={handleRemoveStory} />
+      )}
     </div>
   );
 }
