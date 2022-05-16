@@ -21,13 +21,26 @@ const initialStories = [
 
 // F)
 // Return a promise with data once it resolves
-// note: resolved object returned holds, after a 2 sec delay, the list of stories (aka initialStories)
+// note: returned resolved object holds, after a 2 sec delay, the list of stories (aka initialStories)
 const getAsyncStories = () =>
   new Promise((resolve) => {
     setTimeout(() => {
       resolve({ data: { stories: initialStories } });
     }, 2000);
   });
+
+// Conditional states can lead to impossible states & undesired behavior in the UI
+// i.e., an error occurs for the asynchronous data
+// -> change pseudo data-fetching function to simulate an error (our implementation of error handling)
+// const getAsyncStories = () => {
+//   new Promise((resolve, reject) => {
+//     setTimeout(reject, 2000);
+//   });
+// };
+
+// Road to React abbreviated version
+// const getAsyncStories = () =>
+//   new Promise((resolve, reject) => setTimeout(reject, 2000));
 
 // Create custom built-in hook to keep the component's state in sync w/the browser's local storage
 const useStorageState = (key, initialState) => {
@@ -64,40 +77,61 @@ const useStorageState = (key, initialState) => {
 
 // Manage the stories and its state transitions in a reducer function
 // note: reducer receives 2 arguments, a state and an action, to return a new state
-// Refactor to a switch statement so all state transitions are more readable (a React best practice)
+
+// Problem: if-else statements will eventually clutter when adding more state transitions in one reducer func)
+// -> Refactor to a switch statement so all state transitions are more readable (a React best practice)
+
+// For every state transition, return a *new state object* which contains all key/value pairs from...
+// the current state object (via JS's spread operator) and the new overwriting properties
+// e.g. keeps all the other state intact (data alias stories)
 const storiesReducer = (state, action) => {
+  // Add cases for state transitions
+  // note: state structure changed from an array to a complex object
   switch (action.type) {
+    // Set state accordingly when data gets fetched (isLoading: true)
+    case "STORIES_FETCH_INIT":
+      return {
+        ...state,
+        isLoading: true,
+        isError: false,
+      };
     // Set a list of stories as state for the asynchronously arriving data:
-    case "SET_STORIES":
+    // (payload updates the state just as it would if using a state updater func)
+    case "STORIES_FETCH_SUCCESS":
       // -return a new state (the payload of the incoming action)
       // -note: we don't use the current state to compute the new state
-      return action.payload;
+      return {
+        // all the key/value pairs from the current state object
+        ...state,
+        // the new overwriting properties (while keeping all the other state intact)
+        isLoading: false,
+        isError: false,
+        data: action.payload,
+      };
+    // Error sets loading boolean to false
+    case "STORIES_FETCH_FAILURE":
+      return {
+        ...state,
+        isLoading: false,
+        isError: true,
+      };
     // Remove a story from the list of stories:
     case "REMOVE_STORY":
       // -remove story from current state and return a new list of filtered stories as state
-      return state.filter(
-        (story) => action.payload.objectID !== story.objectID
-      );
+      return {
+        // note: state is a complex object w/data, isLoading, and error states rather than...
+        // just a list of stories.
+        ...state,
+        // -> now access data (alias for stories) through state.data
+        data: state.data.filter(
+          (story) => action.payload.objectID !== story.objectID
+        ),
+      };
+    // Throw an error to remind yourself that the implementation isn't covered
     default:
-      // Throw an error to remind yourself that the implementation isn't covered
       throw new Error();
   }
 };
-
-// if-else statements -> will eventually clutter when adding more state transitions in one reducer func)
-// const storiesReducer = (state, action) => {
-//   if (action.type === "SET_STORIES") {
-//     // Return a new state (the payload of the incoming action)
-//     // note: we don't use the current state to compute the new state
-//     return action.payload;
-//   } else if (action.type === "REMOVE_STORY") {
-//     // Remove story from current state and return a new list of filtered stories as state
-//     return state.filter((story) => action.payload.objectID !== story.objectID);
-//   } else {
-//     // Throw an error to remind yourself that the implementation isn't covered
-//     throw new Error();
-//   }
-// };
 
 function App() {
   // A)
@@ -108,34 +142,53 @@ function App() {
   // Start w/an empty list of stories (an empty array) for the initial state
   // (we will eventually simulate fetching these stories asynchronously)
 
-  // Exchange useState for useReducer for managing stories
-  // i.e, new hook receives a reducer function and an initial state as arguments plus...
+  // Goal: move from unreliable state transitions w/multiple useState hooks to predictable...
+  // state transitions w/React's useReducer Hook.
+
+  // Exchange useState for useReducer to manage domain-related states (stories, loading, & error states)
+  // Note: a way to improve our chances of not dealing w/bugs by moving states that belong together into...
+  // a single useReducer hook (multiple hooks -> single useReducer hook)
+  // -> merge states that belong together into one useReducer hook for a unified state management
+
+  // Note: a new hook receives a reducer function and an initial state as arguments plus...
   // returns an array with two items: 1) current state; and 2) state updater func (aka dispatch function)
+
   // note: instead of setting the state EXPLICITLY w/the state updater func from useState, the...
   // useReducer state updater func sets the state IMPLICITLY by dispatching an action for the reducer
-  const [stories, dispatchStories] = React.useReducer(storiesReducer, []);
-
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [isError, setIsError] = React.useState(false);
+  const [stories, dispatchStories] = React.useReducer(storiesReducer, {
+    data: [],
+    isLoading: false,
+    isError: false,
+  });
 
   // G)
   // Simulate fetching stories (initialStories) asynchronously:
   // a) call getAsyncStories() function
   // b) resolve the returned promise (result) as a side-effect (only runs once component renders for 1st time)
   React.useEffect(() => {
-    // Set state accordingly when data gets fetched
-    setIsLoading(true);
+    // dispatch function receives a distinct type and a payload
+    dispatchStories({ type: "STORIES_FETCH_INIT" });
 
     getAsyncStories()
       .then((result) => {
         dispatchStories({
-          type: "SET_STORIES",
+          type: "STORIES_FETCH_SUCCESS",
           payload: result.data.stories,
         });
-        setIsLoading(false);
       })
-      .catch(() => setIsError(true));
+      .catch(() => dispatchStories({ type: "STORIES_FETCH_FAILURE" }));
   }, []);
+
+  //   getAsyncStories()
+  //     .then((result) => {
+  //       dispatchStories({
+  //         type: "SET_STORIES",
+  //         payload: result.data.stories,
+  //       });
+  //       setIsLoading(false);
+  //     })
+  //     .catch(() => setIsError(true));
+  // }, []);
 
   // Write an event handler which removes an item from the list
   const handleRemoveStory = (item) => {
@@ -160,8 +213,9 @@ function App() {
 
   // *Note*: after the state is updated, the component renders again
 
+  // Address the state NOW as object and NOT as array anymore
   // J) The filter function checks whether current searchTerm state is present in the story item's title
-  const searchedStories = stories.filter((story) =>
+  const searchedStories = stories.data.filter((story) =>
     // Address the letter case so the filter function won't be too opinionated & render no list:
     // -> story's title not case sensitive + check to see if...
     // -> current state searchTerm characters (also not case sensitive) match w/item title of stories array
@@ -188,12 +242,12 @@ function App() {
       <hr />
       {/* Conditionally render JSX: */}
       {/* Render error message when can't retrieve data from remote API (a simulation) */}
-      {isError && <p>Something went wrong. Yikes ...</p>}
+      {stories.isError && <p>Something went wrong. Yikes ...</p>}
 
       {/* K) Send post-filtered title match to List component */}
       {/* L) Receive back from List component & in list form: item match w/displayed key/values 
       (except for objectID -> not displayed but used as an identifier for item) */}
-      {isLoading ? (
+      {stories.isLoading ? (
         <p>Loading ...</p>
       ) : (
         <List list={searchedStories} onRemoveItem={handleRemoveStory} />
