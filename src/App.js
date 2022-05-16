@@ -30,7 +30,7 @@ const getAsyncStories = () =>
   });
 
 // Create custom built-in hook to keep the component's state in sync w/the browser's local storage
-function useStorageState(key, initialState) {
+const useStorageState = (key, initialState) => {
   // With useState, you tell React that value is a state that changes over time:
   // when state changes, React re-renders its affected component(s)
 
@@ -60,7 +60,44 @@ function useStorageState(key, initialState) {
   // D)
   // React convention: Return most recent search value and state updater function in an array form
   return [value, setValue];
-}
+};
+
+// Manage the stories and its state transitions in a reducer function
+// note: reducer receives 2 arguments, a state and an action, to return a new state
+// Refactor to a switch statement so all state transitions are more readable (a React best practice)
+const storiesReducer = (state, action) => {
+  switch (action.type) {
+    // Set a list of stories as state for the asynchronously arriving data:
+    case "SET_STORIES":
+      // -return a new state (the payload of the incoming action)
+      // -note: we don't use the current state to compute the new state
+      return action.payload;
+    // Remove a story from the list of stories:
+    case "REMOVE_STORY":
+      // -remove story from current state and return a new list of filtered stories as state
+      return state.filter(
+        (story) => action.payload.objectID !== story.objectID
+      );
+    default:
+      // Throw an error to remind yourself that the implementation isn't covered
+      throw new Error();
+  }
+};
+
+// if-else statements -> will eventually clutter when adding more state transitions in one reducer func)
+// const storiesReducer = (state, action) => {
+//   if (action.type === "SET_STORIES") {
+//     // Return a new state (the payload of the incoming action)
+//     // note: we don't use the current state to compute the new state
+//     return action.payload;
+//   } else if (action.type === "REMOVE_STORY") {
+//     // Remove story from current state and return a new list of filtered stories as state
+//     return state.filter((story) => action.payload.objectID !== story.objectID);
+//   } else {
+//     // Throw an error to remind yourself that the implementation isn't covered
+//     throw new Error();
+//   }
+// };
 
 function App() {
   // A)
@@ -70,7 +107,13 @@ function App() {
   // E)
   // Start w/an empty list of stories (an empty array) for the initial state
   // (we will eventually simulate fetching these stories asynchronously)
-  const [stories, setStories] = React.useState([]);
+
+  // Exchange useState for useReducer for managing stories
+  // i.e, new hook receives a reducer function and an initial state as arguments plus...
+  // returns an array with two items: 1) current state; and 2) state updater func (aka dispatch function)
+  // note: instead of setting the state EXPLICITLY w/the state updater func from useState, the...
+  // useReducer state updater func sets the state IMPLICITLY by dispatching an action for the reducer
+  const [stories, dispatchStories] = React.useReducer(storiesReducer, []);
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [isError, setIsError] = React.useState(false);
@@ -85,7 +128,10 @@ function App() {
 
     getAsyncStories()
       .then((result) => {
-        setStories(result.data.stories);
+        dispatchStories({
+          type: "SET_STORIES",
+          payload: result.data.stories,
+        });
         setIsLoading(false);
       })
       .catch(() => setIsError(true));
@@ -93,10 +139,16 @@ function App() {
 
   // Write an event handler which removes an item from the list
   const handleRemoveStory = (item) => {
-    const newStories = stories.filter(
-      (story) => item.objectID !== story.objectID
-    );
-    setStories(newStories);
+    // const newStories = stories.filter(
+    //   (story) => item.objectID !== story.objectID
+    // );
+
+    // Set state IMPLICITLY by dispatching an action for the reducer (via the state updater function):
+    // the action comes w/a 1) type and an 2) optional payload.
+    dispatchStories({
+      type: "REMOVE_STORY",
+      payload: item,
+    });
   };
 
   // I) Callback handler reference receives event object from <Search /> instance to update state
