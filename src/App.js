@@ -1,46 +1,9 @@
 import * as React from "react";
 
-const initialStories = [
-  {
-    title: "React",
-    url: "https://reactjs.org/",
-    author: "Jordan Walke",
-    num_comments: 3,
-    points: 4,
-    objectID: 0,
-  },
-  {
-    title: "Redux",
-    url: "https://redux.js.org/",
-    author: "Dan Abramov, Andrew Clark",
-    num_comments: 2,
-    points: 5,
-    objectID: 1,
-  },
-];
-
-// F)
-// Return a promise with data once it resolves
-// note: returned resolved object holds, after a 2 sec delay, the list of stories (aka initialStories)
-const getAsyncStories = () =>
-  new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ data: { stories: initialStories } });
-    }, 2000);
-  });
-
-// Conditional states can lead to impossible states & undesired behavior in the UI
-// i.e., an error occurs for the asynchronous data
-// -> change pseudo data-fetching function to simulate an error (our implementation of error handling)
-// const getAsyncStories = () => {
-//   new Promise((resolve, reject) => {
-//     setTimeout(reject, 2000);
-//   });
-// };
-
-// Road to React abbreviated version
-// const getAsyncStories = () =>
-//   new Promise((resolve, reject) => setTimeout(reject, 2000));
+// F??
+// Connect to a remote API to fetch the data directly from the API
+// i.e. fetch tech stories for a certain query (a search term) -> on ..'.=react'
+const API_ENDPOINT = "https://hn.algolia.com/api/v1/search?query='";
 
 // Create custom built-in hook to keep the component's state in sync w/the browser's local storage
 const useStorageState = (key, initialState) => {
@@ -165,30 +128,25 @@ function App() {
   // Simulate fetching stories (initialStories) asynchronously:
   // a) call getAsyncStories() function
   // b) resolve the returned promise (result) as a side-effect (only runs once component renders for 1st time)
+
   React.useEffect(() => {
     // dispatch function receives a distinct type and a payload
     dispatchStories({ type: "STORIES_FETCH_INIT" });
 
-    getAsyncStories()
+    // Fetch tech stories related to the initial query aka the search term (about React)
+    // Use native browser's fetch API to make this request
+    fetch(`${API_ENDPOINT}react`)
+      // Obtain the actual JSON response body (initially receive a representation of the entire HTTP response)
+      .then((response) => response.json())
+      // Receive the JSON response body to send as payload to our component's state reducer
       .then((result) => {
         dispatchStories({
           type: "STORIES_FETCH_SUCCESS",
-          payload: result.data.stories,
+          payload: result.hits,
         });
       })
       .catch(() => dispatchStories({ type: "STORIES_FETCH_FAILURE" }));
   }, []);
-
-  //   getAsyncStories()
-  //     .then((result) => {
-  //       dispatchStories({
-  //         type: "SET_STORIES",
-  //         payload: result.data.stories,
-  //       });
-  //       setIsLoading(false);
-  //     })
-  //     .catch(() => setIsError(true));
-  // }, []);
 
   // Write an event handler which removes an item from the list
   const handleRemoveStory = (item) => {
@@ -242,7 +200,7 @@ function App() {
       <hr />
       {/* Conditionally render JSX: */}
       {/* Render error message when can't retrieve data from remote API (a simulation) */}
-      {stories.isError && <p>Something went wrong. Yikes ...</p>}
+      {stories.isError && <p>Something went wrong. Yikes...</p>}
 
       {/* K) Send post-filtered title match to List component */}
       {/* L) Receive back from List component & in list form: item match w/displayed key/values 
