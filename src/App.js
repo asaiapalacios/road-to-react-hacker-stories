@@ -130,12 +130,18 @@ function App() {
   // b) resolve the returned promise (result) as a side-effect (only runs once component renders for 1st time)
 
   React.useEffect(() => {
+    // Handle the edge case when searchTerm is an empty string:
+    // -if 'searchTerm' is not present (e.g. null, empty string, undefined), do nothing
+    // Note: !searchTerm is a more generalized condition than searchTerm === ''
+    if (!searchTerm) return;
     // dispatch function receives a distinct type and a payload
     dispatchStories({ type: "STORIES_FETCH_INIT" });
+    // Fetch tech stories related to the initial query aka the searchTerm
+    // -> use native browser's fetch API to make this request
 
-    // Fetch tech stories related to the initial query aka the search term (about React)
-    // Use native browser's fetch API to make this request
-    fetch(`${API_ENDPOINT}react`)
+    // *Point*: every time a user searches for something via the input field,..
+    // the searchTerm will be used to request these kind of stories from the remote API
+    fetch(`${API_ENDPOINT}{searchTerm}`)
       // Obtain the actual JSON response body (initially receive a representation of the entire HTTP response)
       .then((response) => response.json())
       // Receive the JSON response body to send as payload to our component's state reducer
@@ -146,7 +152,8 @@ function App() {
         });
       })
       .catch(() => dispatchStories({ type: "STORIES_FETCH_FAILURE" }));
-  }, []);
+    // Run side effect also when the searchTerm changes (server-side search occurs)
+  }, [searchTerm]);
 
   // Write an event handler which removes an item from the list
   const handleRemoveStory = (item) => {
@@ -171,15 +178,15 @@ function App() {
 
   // *Note*: after the state is updated, the component renders again
 
-  // Address the state NOW as object and NOT as array anymore
+  // Note: previous derived value (see below), searchedStories, can be removed, because we...
+  // now receive the stories (data) filtered by search term from the API
+
   // J) The filter function checks whether current searchTerm state is present in the story item's title
-  const searchedStories = stories.data.filter((story) =>
-    // Address the letter case so the filter function won't be too opinionated & render no list:
-    // -> story's title not case sensitive + check to see if...
-    // -> current state searchTerm characters (also not case sensitive) match w/item title of stories array
-    // Point: if search characters typed match title characters, send to List component
-    story.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Address the letter case so the filter function won't be too opinionated & render no list
+  // Point: if search characters typed match title characters, send to List component
+  // const searchedStories = stories.data.filter((story) =>
+  //   story.title.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
   return (
     <div>
@@ -208,7 +215,8 @@ function App() {
       {stories.isLoading ? (
         <p>Loading ...</p>
       ) : (
-        <List list={searchedStories} onRemoveItem={handleRemoveStory} />
+        // Pass only the regular stories already filtered from remote API to the List component
+        <List list={stories.data} onRemoveItem={handleRemoveStory} />
       )}
     </div>
   );
