@@ -124,12 +124,9 @@ function App() {
     isError: false,
   });
 
-  // G)
-  // Simulate fetching stories (initialStories) asynchronously:
-  // a) call getAsyncStories() function
-  // b) resolve the returned promise (result) as a side-effect (only runs once component renders for 1st time)
-
-  React.useEffect(() => {
+  // Use a memoized function instead of using the data fetching logic directly in the side-effect
+  // -> a reusable function for the entire application
+  const handleFetchStories = React.useCallback(() => {
     // Handle the edge case when searchTerm is an empty string:
     // -if 'searchTerm' is not present (e.g. null, empty string, undefined), do nothing
     // Note: !searchTerm is a more generalized condition than searchTerm === ''
@@ -152,8 +149,19 @@ function App() {
         });
       })
       .catch(() => dispatchStories({ type: "STORIES_FETCH_FAILURE" }));
-    // Run side effect also when the searchTerm changes (server-side search occurs)
+    // Every time its dependencay array changes, invoke handleFetchStories in the useEffect hook
   }, [searchTerm]);
+
+  // G)
+  // Simulate fetching stories (initialStories) asynchronously:
+  // a) call getAsyncStories() function
+  // b) resolve the returned promise (result) as a side-effect (only runs once component renders for 1st time)
+
+  React.useEffect(() => {
+    // When searchTerm changes (server-side search occurs), invoke the memoized function of useCallback Hook
+    // -> avoid getting stuck in an endless loop if fetched data logic remains in useEffect
+    handleFetchStories();
+  }, [handleFetchStories]);
 
   // Write an event handler which removes an item from the list
   const handleRemoveStory = (item) => {
