@@ -101,6 +101,8 @@ function App() {
   // Call custom hook and pass 2 arguments; Receive returned array values for [searchterm, setSearchTerm]
   const [searchTerm, setSearchTerm] = useStorageState("search", "React");
 
+  const [url, setUrl] = React.useState(`${API_ENDPOINT}${searchTerm}`);
+
   // E)
   // Start w/an empty list of stories (an empty array) for the initial state
   // (we will eventually simulate fetching these stories asynchronously)
@@ -130,15 +132,17 @@ function App() {
     // Handle the edge case when searchTerm is an empty string:
     // -if 'searchTerm' is not present (e.g. null, empty string, undefined), do nothing
     // Note: !searchTerm is a more generalized condition than searchTerm === ''
-    if (!searchTerm) return;
+    // if (!searchTerm) return;
+
     // dispatch function receives a distinct type and a payload
     dispatchStories({ type: "STORIES_FETCH_INIT" });
+
     // Fetch tech stories related to the initial query aka the searchTerm
     // -> use native browser's fetch API to make this request
 
     // *Point*: every time a user searches for something via the input field,..
     // the searchTerm will be used to request these kind of stories from the remote API
-    fetch(`${API_ENDPOINT}{searchTerm}`)
+    fetch(url)
       // Obtain the actual JSON response body (initially receive a representation of the entire HTTP response)
       .then((response) => response.json())
       // Receive the JSON response body to send as payload to our component's state reducer
@@ -150,7 +154,7 @@ function App() {
       })
       .catch(() => dispatchStories({ type: "STORIES_FETCH_FAILURE" }));
     // Every time its dependencay array changes, invoke handleFetchStories in the useEffect hook
-  }, [searchTerm]);
+  }, [url]);
 
   // G)
   // Simulate fetching stories (initialStories) asynchronously:
@@ -178,10 +182,14 @@ function App() {
   };
 
   // I) Callback handler reference receives event object from <Search /> instance to update state
-  const handleSearch = (e) => {
+  const handleSearchInput = (e) => {
     // Access input field value to alter the current state searchTerm
     // -> set the updated state via the state updater function setSearchTerm
     setSearchTerm(e.target.value);
+  };
+
+  const handleSearchSubmit = () => {
+    setUrl(`${API_ENDPOINT}${searchTerm}`);
   };
 
   // *Note*: after the state is updated, the component renders again
@@ -207,10 +215,14 @@ function App() {
         value={searchTerm}
         // Let developer decide wheter the input field should have an active autoFocus
         isFocused
-        onInputChange={handleSearch}
+        onInputChange={handleSearchInput}
       >
         <strong>Search:</strong>
       </InputWithLabel>
+
+      <button type="button" disabled={!searchTerm} onClick={handleSearchSubmit}>
+        Submit
+      </button>
 
       <hr />
       {/* Conditionally render JSX: */}
