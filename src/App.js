@@ -140,8 +140,8 @@ function App() {
     // Fetch tech stories related to the initial query aka the searchTerm
     // -> use native browser's fetch API to make this request
 
-    // *Point*: every time a user searches for something via the input field,..
-    // the searchTerm will be used to request these kind of stories from the remote API
+    // **When a user types a search word via the input field AND confirms search req by click of button...**
+    // the new stateful url is updated & used to fetch the data user requests from the remote API.
     fetch(url)
       // Obtain the actual JSON response body (initially receive a representation of the entire HTTP response)
       .then((response) => response.json())
@@ -153,7 +153,8 @@ function App() {
         });
       })
       .catch(() => dispatchStories({ type: "STORIES_FETCH_FAILURE" }));
-    // Every time its dependencay array changes, invoke handleFetchStories in the useEffect hook
+    // On every url change (a dependency array change), invoke handleFetchStories in the useEffect hook
+    // -> this will activate the side-effect for fetching data
   }, [url]);
 
   // G)
@@ -181,13 +182,15 @@ function App() {
     });
   };
 
+  // Rename handler of the input field (note: handler still sets the stateful searchTerm)
   // I) Callback handler reference receives event object from <Search /> instance to update state
   const handleSearchInput = (e) => {
-    // Access input field value to alter the current state searchTerm
+    // Access input field value to alter the current state searchTerm (update input field's state)
     // -> set the updated state via the state updater function setSearchTerm
     setSearchTerm(e.target.value);
   };
-
+  // Set the new stateful url (derived from the current searchTerm + static API endpoint as new state)
+  // -> so when a user clicks button, a change in url state triggers the side-effect that fetches the data
   const handleSearchSubmit = () => {
     setUrl(`${API_ENDPOINT}${searchTerm}`);
   };
@@ -215,11 +218,12 @@ function App() {
         value={searchTerm}
         // Let developer decide wheter the input field should have an active autoFocus
         isFocused
+        // Distinguish between the handler of the input field & the button (handleSearchSubmit)
         onInputChange={handleSearchInput}
       >
         <strong>Search:</strong>
       </InputWithLabel>
-
+      {/* Create a button which confirms the search & will execute the data request eventually */}
       <button type="button" disabled={!searchTerm} onClick={handleSearchSubmit}>
         Submit
       </button>
