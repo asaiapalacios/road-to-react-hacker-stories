@@ -1,4 +1,5 @@
 import * as React from "react";
+import axios from "axios";
 
 // F??
 // Connect to a remote API to fetch the data directly from the API
@@ -138,18 +139,23 @@ function App() {
     dispatchStories({ type: "STORIES_FETCH_INIT" });
 
     // Fetch tech stories related to the initial query aka the searchTerm
-    // -> use native browser's fetch API to make this request
+    // -> use 3rd-party library axios for an explicit HTTP GET request
+    // i.e., axios.get() is the same HTTP method we used by default w/the browsers native fetch API
 
     // **When a user types a search word via the input field AND confirms search req by click of button...**
     // the new stateful url is updated & used to fetch the data user requests from the remote API.
-    fetch(url)
+    axios
+      .get(url)
+      // Below: no longer need to transfrom returned response to JSON b/c now using 3rd-party library axios
       // Obtain the actual JSON response body (initially receive a representation of the entire HTTP response)
-      .then((response) => response.json())
-      // Receive the JSON response body to send as payload to our component's state reducer
+      // .then((response) => response.json())
+
+      // Receive the response body to send as payload to our component's state reducer
+      // -> axios wraps the result into a data object in JS for us (no need to convert to JSON anymore)
       .then((result) => {
         dispatchStories({
           type: "STORIES_FETCH_SUCCESS",
-          payload: result.hits,
+          payload: result.data.hits,
         });
       })
       .catch(() => dispatchStories({ type: "STORIES_FETCH_FAILURE" }));
