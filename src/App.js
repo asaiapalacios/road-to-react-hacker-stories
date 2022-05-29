@@ -129,36 +129,34 @@ function App() {
 
   // Use a memoized function instead of using the data fetching logic directly in the side-effect
   // -> a reusable function for the entire application
-  const handleFetchStories = React.useCallback(() => {
-    // Handle the edge case when searchTerm is an empty string:
-    // -if 'searchTerm' is not present (e.g. null, empty string, undefined), do nothing
-    // Note: !searchTerm is a more generalized condition than searchTerm === ''
-    // if (!searchTerm) return;
-
+  const handleFetchStories = React.useCallback(async () => {
     // dispatch function receives a distinct type and a payload
     dispatchStories({ type: "STORIES_FETCH_INIT" });
-
     // Fetch tech stories related to the initial query aka the searchTerm
     // -> use 3rd-party library axios for an explicit HTTP GET request
     // i.e., axios.get() is the same HTTP method we used by default w/the browsers native fetch API
 
-    // **When a user types a search word via the input field AND confirms search req by click of button...**
+    // When a user types a search word via the input field **AND** confirms search req by click of button...
     // the new stateful url is updated & used to fetch the data user requests from the remote API.
-    axios
-      .get(url)
+
+    // Include error handling with try/catch (helps avoid using callback functions for then/catch)
+    // -if something goes wrong in the try block, code jumps into the catch block to handle the error
+    try {
+      // Use await keyword to pause execution of code after this line until promise resolves or rejection
+      const result = await axios.get(url);
       // Below: no longer need to transfrom returned response to JSON b/c now using 3rd-party library axios
-      // Obtain the actual JSON response body (initially receive a representation of the entire HTTP response)
+      // (1st receive a representation of the *entire* HTTP response, then transform to a JSON response body)
       // .then((response) => response.json())
 
       // Receive the response body to send as payload to our component's state reducer
       // -> axios wraps the result into a data object in JS for us (no need to convert to JSON anymore)
-      .then((result) => {
-        dispatchStories({
-          type: "STORIES_FETCH_SUCCESS",
-          payload: result.data.hits,
-        });
-      })
-      .catch(() => dispatchStories({ type: "STORIES_FETCH_FAILURE" }));
+      dispatchStories({
+        type: "STORIES_FETCH_SUCCESS",
+        payload: result.data.hits,
+      });
+    } catch {
+      dispatchStories({ type: "STORIES_FETCH_FAILURE" });
+    }
     // On every url change (a dependency array change), invoke handleFetchStories in the useEffect hook
     // -> this will activate the side-effect for fetching data
   }, [url]);
