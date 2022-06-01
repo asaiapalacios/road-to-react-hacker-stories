@@ -193,10 +193,13 @@ function App() {
     // -> set the updated state via the state updater function setSearchTerm
     setSearchTerm(e.target.value);
   };
-  // Set the new stateful url (derived from the current searchTerm + static API endpoint as new state)
+  // Use handler for the form event
+  // Set the new stateful url (derived from the static API endpoint + current searchTerm as new state)
   // -> so when a user clicks button, a change in url state triggers the side-effect that fetches the data
-  const handleSearchSubmit = () => {
+  const handleSearchSubmit = (event) => {
     setUrl(`${API_ENDPOINT}${searchTerm}`);
+    // Execute preventDefault() to prevent the HTML form's native behavior (would lead to a browser reload)
+    event.preventDefault();
   };
 
   // *Note*: after the state is updated, the component renders again
@@ -214,23 +217,16 @@ function App() {
   return (
     <div>
       <h1>My Hacker Stories</h1>
-      {/* H) Pass value state (searchTerm) and callback handler to Search component */}
-      {/* handleSearch is a reference to the callback function handleSearch() */}
-      {/* this callback handler receives the event obj from InputWithLabel component onChange property */}
-      <InputWithLabel
-        id="search"
-        value={searchTerm}
-        // Let developer decide wheter the input field should have an active autoFocus
-        isFocused
-        // Distinguish between the handler of the input field & the button (handleSearchSubmit)
-        onInputChange={handleSearchInput}
-      >
-        <strong>Search:</strong>
-      </InputWithLabel>
-      {/* Create a button which confirms the search & will execute the data request eventually */}
-      <button type="button" disabled={!searchTerm} onClick={handleSearchSubmit}>
-        Submit
-      </button>
+
+      {/* Instantiate the new component SearchForm in the App component */}
+      {/* note: the App component still manages the state for the form though b/c... */}
+      {/* - the state triggers the data request in the App component where the... */}
+      {/* -requested data will eventually get passed as props (here: stories.data) to the List compon */}
+      <SearchForm
+        searchTerm={searchTerm}
+        onSearchInput={handleSearchInput}
+        onSearchSubmit={handleSearchSubmit}
+      />
 
       <hr />
       {/* Conditionally render JSX: */}
@@ -247,6 +243,36 @@ function App() {
         <List list={stories.data} onRemoveItem={handleRemoveStory} />
       )}
     </div>
+  );
+}
+
+// Separate the whole form into a new SearchForm component
+function SearchForm({ searchTerm, onSearchInput, onSearchSubmit }) {
+  return (
+    // Wrap input field and button into an HTML form element
+    // -> now we can execute the search feature with the keyboard's "Enter" key, because...
+    // ...we are using a form instead of just a standalone button.
+    <form onSubmit={onSearchSubmit}>
+      {/* H) Pass value state (searchTerm) and callback handler to Search component */}
+      {/* handleSearch is a reference to the callback function handleSearch() */}
+      {/* this callback handler receives the event obj from InputWithLabel component onChange property */}
+      <InputWithLabel
+        id="search"
+        value={searchTerm}
+        // Let developer decide wheter the input field should have an active autoFocus
+        isFocused
+        // Distinguish between the handler of the input field & the button (handleSearchSubmit)
+        onInputChange={onSearchInput}
+      >
+        <strong>Search:</strong>
+      </InputWithLabel>
+      {/* Create a button which confirms the search */}
+      {/* Indicate that the form element's onSubmit (& no longer the button) handles:
+       the click event sent from the button's new type attribute submit*/}
+      <button type="submit" disabled={!searchTerm}>
+        Submit
+      </button>
+    </form>
   );
 }
 
